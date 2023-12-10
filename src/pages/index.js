@@ -160,10 +160,10 @@ const IndexPage = () => {
   async function mapEffect({ leafletElement: map } = {}) {
     if ( !map || !hasCountries ) return;
 
-    // clearMapLayers({
-    //   map,
-    //   excludeByName: ['Mapbox'],
-    // });
+    clearMapLayers({
+      map,
+      excludeByName: ['Mapbox'],
+    });
 
     const locationsGeoJson = trackerLocationsToGeoJson( countries );
 
