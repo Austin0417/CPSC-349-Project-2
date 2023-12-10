@@ -1,25 +1,27 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect } from 'react';
+import Helmet from 'react-helmet';
 import PropTypes from "prop-types";
-import { Helmet } from "react-helmet";
-import L from "leaflet";
-import { Marker, useMap } from "react-leaflet";
+import L from 'leaflet';
+import { Marker, useMap } from 'react-leaflet';
 
-import { promiseToFlyTo, getCurrentLocation } from "lib/map";
-
-import Layout from "components/Layout";
-import Container from "components/Container";
-import Map from "components/Map";
-
+import { promiseToFlyTo, geoJsonToMarkers, clearMapLayers, getCurrentLocation } from 'lib/map';
+import { trackerLocationsToGeoJson, trackerFeatureToHtmlMarker } from 'lib/coronavirus';
+import { commafy, friendlyDate } from 'lib/util';
+import { useCoronavirusTracker } from 'hooks';
 import axios from 'axios';
 
-const LOCATION = { lat: 0, lng: 0 };   // middle of the world
-  // { lat: 38.9072, lng: -77.0369 };  // in Los Angeles
+import Layout from 'components/Layout';
+import Container from 'components/Container';
+import Map from 'components/Map';
 
-  const CENTER = [LOCATION.lat, LOCATION.lng];
-const DEFAULT_ZOOM = 2;
-const ZOOM = 10;
-
+const LOCATION = {
+  lat: 0,
+  lng: 0,
+};
+const CENTER = [LOCATION.lat, LOCATION.lng];
+const DEFAULT_ZOOM = 1;
 const timeToZoom = 2000;
+const ZOOM = 10;
 
 function countryPointToLayer (feature = {}, latlng) { 
   const { properties = {} } = feature;
@@ -75,24 +77,9 @@ const MapEffect = ({ markerRef }) => {
     (async function run() {
       console.log('about to call axios to get the data...');
 
-      // const options = {
-      //   method: 'GET',
-      //   url: 'https://api.api-ninjas.com/v1/covid19',
-      //   // params: {country: 'China'},    // for one country -- if blank will get all countries
-      //   headers: {
-      //     'X-API-Key': 'Vx489MBLcso/FNugQeMLNw==7tSBYITt1WeQkCTu',
-      //     'X-API-Host': 'api.api-ninjas.com'
-      //   }
-      // };
-
-
       const options = {
         method: 'GET',
         url: 'https://disease.sh/v3/covid-19/countries',
-        // params: {country: 'China'},    // for one country -- if blank will get all countries
-        // headers: {
-        //   'Disease.sh': 'disease.sh'
-        // }
       };
       
       let response; 
@@ -103,8 +90,6 @@ const MapEffect = ({ markerRef }) => {
         return; 
       }
       console.log(response.data);
-      // const rdr = response.data.response;    // for rapidapi
-      // const data = rdr;
 
       const data = response.data;     // for disease.sh
       const hasData = Array.isArray(data) && data.length > 0;
@@ -155,27 +140,177 @@ MapEffect.propTypes = {
 };
 
 const IndexPage = () => {
-  console.log('in IndexPage, before useRef');
   const markerRef = useRef();
+  const { data: countries = [] } = useCoronavirusTracker({
+    api: 'countries',
+  });
+
+  const { data: stats = {} } = useCoronavirusTracker({
+    api: 'all',
+  });
+
+  const hasCountries = Array.isArray( countries ) && countries.length > 0;
+
+  /**
+   * mapEffect
+   * @description Fires a callback once the page renders
+   * @example Here this is and example of being used to zoom in and set a popup on load
+   */
+
+  async function mapEffect({ leafletElement: map } = {}) {
+    if ( !map || !hasCountries ) return;
+
+    // clearMapLayers({
+    //   map,
+    //   excludeByName: ['Mapbox'],
+    // });
+
+    const locationsGeoJson = trackerLocationsToGeoJson( countries );
+
+    const locationsGeoJsonLayers = geoJsonToMarkers( locationsGeoJson, {
+      onClick: handleOnMarkerClick,
+      featureToHtml: trackerFeatureToHtmlMarker,
+    });
+
+    const bounds = locationsGeoJsonLayers.getBounds();
+
+    locationsGeoJsonLayers.addTo( map );
+
+    map.fitBounds( bounds );
+  }
+
+  function handleOnMarkerClick({ feature = {} } = {}, event = {}) {
+    const { target = {} } = event;
+    const { _map: map = {} } = target;
+
+    const { geometry = {}, properties = {} } = feature;
+    const { coordinates } = geometry;
+    const { countryBounds, countryCode } = properties;
+
+    promiseToFlyTo( map, {
+      center: {
+        lat: coordinates[1],
+        lng: coordinates[0],
+      },
+      zoom: 3,
+    });
+
+    if ( countryBounds && countryCode !== 'US' ) {
+      const boundsGeoJsonLayer = new L.GeoJSON( countryBounds );
+      const boundsGeoJsonLayerBounds = boundsGeoJsonLayer.getBounds();
+
+      map.fitBounds( boundsGeoJsonLayerBounds );
+    }
+  }
 
   const mapSettings = {
     center: CENTER,
-    defaultBaseMap: "OpenStreetMap",
+    defaultBaseMap: 'Mapbox',
     zoom: DEFAULT_ZOOM,
+    mapEffect,
   };
 
   return (
     <Layout pageName="home">
-      <Helmet><title>Home Page</title></Helmet>
-      {/* do not delete MapEffect and Marker
-             with current code or axios will not run */}
+      <Helmet>
+        <title>Home Page</title>
+      </Helmet>
+
+      <div className="tracker">
       <Map {...mapSettings}>
        <MapEffect markerRef={markerRef} />            
        <Marker ref={markerRef} position={CENTER} />
       </Map>
 
+        <div className="tracker-stats">
+          <ul>
+            <li className="tracker-stat">
+              <p className="tracker-stat-primary">
+                { stats ? commafy( stats?.tests ) : '-' }
+                <strong>Total Tests</strong>
+              </p>
+              <p className="tracker-stat-secondary">
+                { stats ? commafy( stats?.testsPerOneMillion ) : '-' }
+                <strong>Per 1 Million</strong>
+              </p>
+            </li>
+            <li className="tracker-stat">
+              <p className="tracker-stat-primary">
+                { stats ? commafy( stats?.cases ) : '-' }
+                <strong>Total Cases</strong>
+              </p>
+              <p className="tracker-stat-secondary">
+                { stats ? commafy( stats?.casesPerOneMillion ) : '-' }
+                <strong>Per 1 Million</strong>
+              </p>
+            </li>
+            <li className="tracker-stat">
+              <p className="tracker-stat-primary">
+                { stats ? commafy( stats?.deaths ) : '-' }
+                <strong>Total Deaths</strong>
+              </p>
+              <p className="tracker-stat-secondary">
+                { stats ? commafy( stats?.deathsPerOneMillion ) : '-' }
+                <strong>Per 1 Million</strong>
+              </p>
+            </li>
+            <li className="tracker-stat">
+              <p className="tracker-stat-primary">
+                { stats ? commafy( stats?.active ) : '-' }
+                <strong>Active</strong>
+              </p>
+            </li>
+            <li className="tracker-stat">
+              <p className="tracker-stat-primary">
+                { stats ? commafy( stats?.critical ) : '-' }
+                <strong>Critical</strong>
+              </p>
+            </li>
+            <li className="tracker-stat">
+              <p className="tracker-stat-primary">
+                { stats ? commafy( stats?.recovered ) : '-' }
+                <strong>Recovered</strong>
+              </p>
+            </li>
+          </ul>
+        </div>
+
+        <div className="tracker-last-updated">
+          <p>Last Updated: { stats ? friendlyDate( stats?.updated ) : '-' }</p>
+        </div>
+      </div>
+
       <Container type="content" className="text-center home-start">
-        <h2>Still Getting Started?</h2>
+        <h2>Demo Mapping App with Gatsby and React Leaflet</h2>
+        <ul>
+          <li>
+            Uses{ ' ' }
+            <a href="https://github.com/ExpDev07/coronavirus-tracker-api">
+              github.com/ExpDev07/coronavirus-tracker-api
+            </a>{ ' ' }
+            via <a href="https://coronavirus-tracker-api.herokuapp.com/">coronavirus-tracker-api.herokuapp.com</a>
+          </li>
+          <li>
+            Which uses jhu - <a href="https://github.com/CSSEGISandData/COVID-19">github.com/CSSEGISandData/COVID-19</a>{ ' ' }
+            - Worldwide Data repository operated by the Johns Hopkins University Center for Systems Science and
+            Engineering (JHU CSSE).
+          </li>
+          <li>
+            And csbs -{ ' ' }
+            <a href="https://www.csbs.org/information-covid-19-coronavirus">
+              csbs.org/information-covid-19-coronavirus
+            </a>{ ' ' }
+            - U.S. County data that comes from the Conference of State Bank Supervisors.
+          </li>
+        </ul>
+
+        <h2>Want to build your own map?</h2>
+        <p>
+          Check out{ ' ' }
+          <a href="https://github.com/colbyfayock/gatsby-starter-leaflet">
+            github.com/colbyfayock/gatsby-starter-leaflet
+          </a>
+        </p>
       </Container>
     </Layout>
   );
