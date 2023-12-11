@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { ResponsiveBar } from '@nivo/bar';
 import Helmet from 'react-helmet';
 import PropTypes from "prop-types";
 import L from 'leaflet';
@@ -139,6 +140,251 @@ MapEffect.propTypes = {
   markerRef: PropTypes.object,
 };
 
+function getMajorCountriesData(countriesData) {
+  let result = [];
+  countriesData.forEach((element) => {
+    if (element['country'] === 'Canada' || element['country'] === 'China' || element['country'] === 'India' ||
+    element['country'] === 'Russia' || element['country'] === 'USA') {
+      result.push(element);
+    }
+  });
+  return result;
+}
+
+const TotalCasesBar = ({ countriesData }) => {
+  if (!countriesData) {
+    return;
+  }
+
+  let data = getMajorCountriesData(countriesData);
+  console.log("Total Cases", data);
+  return (
+      <ResponsiveBar 
+      data={data}
+      indexBy='country'
+      keys={['cases']}
+      margin={{
+        top: 50,
+        right: 130,
+        bottom: 50,
+        left: 120
+      }}
+      padding={0.5}
+      axisTop={null}
+      axisRight={null}
+      axisBottom={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Country',
+        legendOffset: 40,
+        legendPosition: 'middle',
+        truncateTickAt: 0
+      }}
+      axisLeft={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: "Total Cases",
+        legendPosition: 'middle',
+        legendOffset: -70,
+        truncateTickAt: 0
+      }}
+      labelSkipWidth={12}
+      labelSkipHeight={12}
+      labelTextColor={{
+        from: 'color',
+        modifiers: [
+          [
+          'darker',
+          1.6
+        ]
+      ]
+      }}
+      legends={[
+        {
+          dataFrom: 'keys',
+          anchor: 'bottom-right',
+          direction: 'column',
+          justify: false,
+          translateX: 120,
+          translateY: 0,
+          itemsSpacing: 2,
+          itemWidth: 100,
+          itemHeight: 20,
+          itemDirection: 'left-to-right',
+          itemOpacity: 0.85,
+          symbolSize: 20,
+          effects: [
+            {
+              on: 'hover',
+              style: {
+                itemOpacity: 1
+              }
+            }
+          ]
+        }
+      ]}
+      >
+      </ResponsiveBar>
+  )
+}
+
+const DeathsActiveRecoveredBar = ({ countriesData }) => {
+  if (!countriesData) {
+    return;
+  }
+  let data = getMajorCountriesData(countriesData);
+  console.log("Deaths and Active", data);
+  return (
+    <ResponsiveBar 
+    data={data}
+    indexBy='country'
+    keys={['deaths', 'active', 'critical', 'recovered']}
+    margin={{
+      top: 50,
+      right: 130,
+      bottom: 50,
+      left: 120
+    }}
+    padding={0.5}
+    axisTop={null}
+    axisRight={null}
+    axisBottom={{
+      tickSize: 5,
+      tickPadding: 5,
+      tickRotation: 0,
+      legend: 'Country',
+      legendOffset: 40,
+      legendPosition: 'middle',
+      truncateTickAt: 0
+    }}
+    axisLeft={{
+      tickSize: 5,
+      tickPadding: 5,
+      tickRotation: 0,
+      legend: "Total Number",
+      legendPosition: 'middle',
+      legendOffset: -70,
+      truncateTickAt: 0
+    }}
+    labelSkipWidth={12}
+    labelSkipHeight={12}
+    labelTextColor={{
+      from: 'color',
+      modifiers: [
+        [
+        'darker',
+        1.6
+      ]
+    ]
+    }}
+    legends={[
+      {
+        dataFrom: 'keys',
+        anchor: 'bottom-right',
+        direction: 'column',
+        justify: false,
+        translateX: 120,
+        translateY: 0,
+        itemsSpacing: 2,
+        itemWidth: 100,
+        itemHeight: 20,
+        itemDirection: 'left-to-right',
+        itemOpacity: 0.85,
+        symbolSize: 20,
+        effects: [
+          {
+            on: 'hover',
+            style: {
+              itemOpacity: 1
+            }
+          }
+        ]
+      }
+    ]}
+    ></ResponsiveBar>
+  )
+}
+
+const CurrentDayDataBar = ({ countriesData }) => {
+  if (!countriesData) {
+    return;
+  }
+  let data = getMajorCountriesData(countriesData);
+  console.log("Current Day", data);
+
+  return (
+    <ResponsiveBar 
+    data={data}
+    indexBy='country'
+    keys={['todayCases', 'todayDeaths', 'todayRecovered']}
+    margin={{
+      top: 50,
+      right: 130,
+      bottom: 50,
+      left: 120
+    }}
+    padding={0.5}
+    axisTop={null}
+    axisRight={null}
+    axisBottom={{
+      tickSize: 5,
+      tickPadding: 5,
+      tickRotation: 0,
+      legend: 'Country',
+      legendOffset: 40,
+      legendPosition: 'middle',
+      truncateTickAt: 0
+    }}
+    axisLeft={{
+      tickSize: 5,
+      tickPadding: 5,
+      tickRotation: 0,
+      legend: "Total Number",
+      legendPosition: 'middle',
+      legendOffset: -70,
+      truncateTickAt: 0
+    }}
+    labelSkipWidth={12}
+    labelSkipHeight={12}
+    labelTextColor={{
+      from: 'color',
+      modifiers: [
+        [
+        'darker',
+        1.6
+      ]
+    ]
+    }}
+    legends={[
+      {
+        dataFrom: 'keys',
+        anchor: 'bottom-right',
+        direction: 'column',
+        justify: false,
+        translateX: 120,
+        translateY: 0,
+        itemsSpacing: 2,
+        itemWidth: 100,
+        itemHeight: 20,
+        itemDirection: 'left-to-right',
+        itemOpacity: 0.85,
+        symbolSize: 20,
+        effects: [
+          {
+            on: 'hover',
+            style: {
+              itemOpacity: 1
+            }
+          }
+        ]
+      }
+    ]}
+    ></ResponsiveBar>
+  )
+}
+
 const IndexPage = () => {
   const markerRef = useRef();
   const { data: countries = [] } = useCoronavirusTracker({
@@ -149,6 +395,8 @@ const IndexPage = () => {
     api: 'all',
   });
 
+
+  console.log('Stats', stats);
   const hasCountries = Array.isArray( countries ) && countries.length > 0;
 
   /**
@@ -181,6 +429,7 @@ const IndexPage = () => {
 
   function handleOnMarkerClick({ feature = {} } = {}, event = {}) {
     const { target = {} } = event;
+    console.log(target);
     const { _map: map = {} } = target;
 
     const { geometry = {}, properties = {} } = feature;
@@ -218,8 +467,8 @@ const IndexPage = () => {
 
       <div className="tracker">
       <Map {...mapSettings}>
-       <MapEffect markerRef={markerRef} />            
-       <Marker ref={markerRef} position={CENTER} />
+       <MapEffect markerRef={markerRef} />
+       <Marker ref={markerRef} position={CENTER}></Marker>             
       </Map>
 
         <div className="tracker-stats">
@@ -279,39 +528,17 @@ const IndexPage = () => {
           <p>Last Updated: { stats ? friendlyDate( stats?.updated ) : '-' }</p>
         </div>
       </div>
-
-      <Container type="content" className="text-center home-start">
-        <h2>Demo Mapping App with Gatsby and React Leaflet</h2>
-        <ul>
-          <li>
-            Uses{ ' ' }
-            <a href="https://github.com/ExpDev07/coronavirus-tracker-api">
-              github.com/ExpDev07/coronavirus-tracker-api
-            </a>{ ' ' }
-            via <a href="https://coronavirus-tracker-api.herokuapp.com/">coronavirus-tracker-api.herokuapp.com</a>
-          </li>
-          <li>
-            Which uses jhu - <a href="https://github.com/CSSEGISandData/COVID-19">github.com/CSSEGISandData/COVID-19</a>{ ' ' }
-            - Worldwide Data repository operated by the Johns Hopkins University Center for Systems Science and
-            Engineering (JHU CSSE).
-          </li>
-          <li>
-            And csbs -{ ' ' }
-            <a href="https://www.csbs.org/information-covid-19-coronavirus">
-              csbs.org/information-covid-19-coronavirus
-            </a>{ ' ' }
-            - U.S. County data that comes from the Conference of State Bank Supervisors.
-          </li>
-        </ul>
-
-        <h2>Want to build your own map?</h2>
-        <p>
-          Check out{ ' ' }
-          <a href="https://github.com/colbyfayock/gatsby-starter-leaflet">
-            github.com/colbyfayock/gatsby-starter-leaflet
-          </a>
-        </p>
-      </Container>
+      <div className='informational-graphs'>
+        <h2 className='graphs-title'>Visualizations with Charts and Graphs</h2>
+        <div className='bars-and-charts' style={{height: 400}}>
+          <h3 className='graph-title'>Total Cases By Country</h3>
+          <TotalCasesBar countriesData={countries}></TotalCasesBar>
+          <h3 className='graph-title'>Total Deaths, Active Cases, Recovered and Critical</h3>
+          <DeathsActiveRecoveredBar countriesData={countries}></DeathsActiveRecoveredBar>
+          <h3 className='graph-title'> Today's COVID Statistics by Country</h3>
+          <CurrentDayDataBar countriesData={countries}></CurrentDayDataBar>
+        </div>
+      </div>
     </Layout>
   );
 };
