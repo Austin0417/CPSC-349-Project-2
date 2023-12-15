@@ -9,6 +9,9 @@
     "url": "https://twitter.com/colbyfayock"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.15.0",
     "@nivo/bar": "^0.84.0",
     "@nivo/core": "^0.84.0",
     "axios": "^1.6.2",
@@ -29,6 +32,7 @@
     "react-helmet": "^6.1.0",
     "react-icons": "^4.4.0",
     "react-leaflet": "^4.0.0",
+    "react-leaflet-cluster": "^2.1.0",
     "sass": "^1.52.3"
   },
   "devDependencies": {

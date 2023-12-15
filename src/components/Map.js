@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { MapContainer, TileLayer, ZoomControl } from "react-leaflet";
+import MarkerClusterGroup from 'react-leaflet-cluster';
 
 import { useConfigureLeaflet, useMapServices } from "hooks";
 import { isDomAvailable } from "lib/util";
