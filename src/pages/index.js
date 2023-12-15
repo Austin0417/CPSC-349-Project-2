@@ -893,9 +893,14 @@ const IndexPage = () => {
             <h3 className='graph-title'>Total Population, Cases, and Deaths Per Country</h3>
             <TotalPopulationCasesDeathsTable countriesData={countries} /> 
             <h3 className='graph-title'>Total Population, Recovered, and Critical Per Country</h3>
-            <TotalPopulationRecoveredCritical countriesData={countries} />         
+            <TotalPopulationRecoveredCritical countriesData={countries} />       
+            <div className='footer'>
+              <h5>Data attributed and sourced from: </h5>
+              <a href='https://disease.sh/'>Disease.sh</a>
+            </div>  
       </div>
       </div>
+
     </Layout>
   );
 };
